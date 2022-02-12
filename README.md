@@ -17,7 +17,11 @@ This repository does not include any data or any scripts to run a Solr instance.
     3. [Rocchio Algorithm](#Rocchio)
     4. [Step-by-Step Demonstration](#Demonstration)
 5. [Proposal to Improve Rocchio Algorithm with Immediate Neighborhood Factor.](#proposal)
-6. [Further Reading](#furhter)
+6. [Usage Examples](#usage)
+    1. [Example 1: Relevance Feedback](#example1)
+    2. [Example 2: Pseudo Relevance Feedback](#example2)
+    3. [Example 3: Relevance Feedback with the Immediate Neighborhood Factor](#example3)
+7. [Further Reading](#furhter)
 
 
 <a name="overview"/>
@@ -191,6 +195,136 @@ This version was able to improve the Mean Average Precision (MAP) for all querie
 The base version of Pseudo Relevance Feedback had a worse MAP than the base system (without any feedback). But with the Immediate Neighborhood Factor achieved an higher MAP than the base system. 
 
 On this system, the highest MAP scoring was achieved with Relevance Feedback with the Immediate Neighborhood Factor. 
+
+<a name="usage"/>
+
+## Usage Examples
+
+<a name="example1"/>
+
+### Example 1: Relevance Feedback.
+
+```kotlin
+    val limitIterations = 3
+
+    var query = "goal disallowed by var"
+
+    var i = 0
+    while (i != limitIterations) {
+        println("****************************************************************")
+        println("****************************************************************")
+
+        // Request results to Apache Solr.
+        val results = SolrClient.getResults(query) ?: break
+
+        // Relevance Feedback: Display each result on the console so that the user can classify them as relevant / non-relevant.
+        RelevanceFeedbackHandler.manuallySelectRelevantResults(results)
+
+        // Computes and displays Precision value.
+        println("PRECISION: " + MetricsEvaluation.computePrecision(results))
+
+        // Build inverted index.
+        val invertedFile = InvertedFileHandler.createInvertedFile(results)
+
+        invertedFile.let {
+
+            // Computes Rocchio Algorithm weight for each term.
+            val rocchioResults = QueryExpanderHandler.rocchioAlgorithm(it, results)
+
+            // Selects top n terms with the greatest weight.
+            val newTerms = QueryExpanderHandler.getTopTerms(query, rocchioResults)
+
+            // Appends those terms to the original query.
+            query = query + " " + newTerms[0] + " " + newTerms[1]
+
+            i++
+        }
+    }
+```
+
+<a name="example2"/>
+
+### Example 2: Pseudo Relevance Feedback.
+
+```kotlin
+    val limitIterations = 3
+
+    var query = "goal disallowed by var"
+
+    var i = 0
+    while (i != limitIterations) {
+        println("****************************************************************")
+        println("****************************************************************")
+
+        // Request results to Apache Solr.
+        val results = SolrClient.getResults(query) ?: break
+
+        // Pseudo Relevance Feedback: Marks top n results as relevant and the others as non-relevant.
+        PseudoRelevanceFeedbackHandler.markTopResultsAsRelevant(results)
+
+        // Build inverted index.
+        val invertedFile = InvertedFileHandler.createInvertedFile(results)
+
+        invertedFile.let {
+
+            // Computes Rocchio Algorithm weight for each term.
+            val rocchioResults = QueryExpanderHandler.rocchioAlgorithm(it, results)
+
+            // Selects top n terms with the greatest weight.
+            val newTerms = QueryExpanderHandler.getTopTerms(query, rocchioResults)
+
+            // Appends those terms to the original query.
+            query = query + " " + newTerms[0] + " " + newTerms[1]
+
+            i++
+        }
+    }
+```
+
+<a name="example3"/>
+
+### Example 3: Relevance Feedback with the Immediate Neighborhood Factor.
+
+```kotlin
+    val limitIterations = 3
+
+    var query = "goal disallowed by var"
+
+    var i = 0
+    while (i != limitIterations) {
+        println("****************************************************************")
+        println("****************************************************************")
+
+        // Request results to Apache Solr.
+        val results = SolrClient.getResults(query) ?: break
+
+        // Relevance Feedback: Display each result on the console so that the user can classify them as relevant / non-relevant.
+        RelevanceFeedbackHandler.manuallySelectRelevantResults(results)
+
+        // Computes and displays Precision value.
+        println("PRECISION: " + MetricsEvaluation.computePrecision(results))
+
+        // Build inverted index.
+        val invertedFile = InvertedFileHandler.createInvertedFile(results)
+
+        invertedFile.let {
+
+            // Computes Immediate Neighborhood Frequency for each term.
+            val immediateNeighborhoodFrequency = QueryExpanderHandler.computeImmediateNeighborhoodFrequency(results, invertedFile, query)
+
+            // Computes Rocchio Algorithm weight for each term and with the addition of the Immediate Neighborhood Frequency.
+            val rocchioResults = QueryExpanderHandler.rocchioAlgorithmExtended(it, results, immediateNeighborhoodFrequency)
+
+            // Selects top n terms with the greatest weight.
+            val newTerms = QueryExpanderHandler.getTopTerms(query, rocchioResults)
+
+            // Appends those terms to the original query.
+            query = query + " " + newTerms[0] + " " + newTerms[1]
+
+            i++
+        }
+    }
+```
 
 <a name="furhter"/>
 
