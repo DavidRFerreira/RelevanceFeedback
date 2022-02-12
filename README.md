@@ -185,10 +185,12 @@ where
 - V[i] is the Immediate Neighborhood Factor for term i (number of times it occurs in the immediate proximity to query's terms). 
 
 With our earlier example, this changed the Query Vector to:
-- [advice] -> [1.15]
-- [referee] -> [0.81]
-- [dean] -> [0.75]
-- ...
+```
+[advice] -> [1.15]
+[referee] -> [0.81]
+[dean] -> [0.75]
+...
+```
 
 This version was able to improve the Mean Average Precision (MAP) for all queries evaluated both on Relevance Feedback and Pseudo Relevance Feedback. 
 
@@ -211,8 +213,6 @@ On this system, the highest MAP scoring was achieved with Relevance Feedback wit
 
     var i = 0
     while (i != limitIterations) {
-        println("****************************************************************")
-        println("****************************************************************")
 
         // Request results to Apache Solr.
         val results = SolrClient.getResults(query) ?: break
@@ -253,8 +253,6 @@ On this system, the highest MAP scoring was achieved with Relevance Feedback wit
 
     var i = 0
     while (i != limitIterations) {
-        println("****************************************************************")
-        println("****************************************************************")
 
         // Request results to Apache Solr.
         val results = SolrClient.getResults(query) ?: break
@@ -292,9 +290,7 @@ On this system, the highest MAP scoring was achieved with Relevance Feedback wit
 
     var i = 0
     while (i != limitIterations) {
-        println("****************************************************************")
-        println("****************************************************************")
-
+ 
         // Request results to Apache Solr.
         val results = SolrClient.getResults(query) ?: break
 
