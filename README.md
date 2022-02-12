@@ -1,6 +1,6 @@
 # Relevance Feedback and Pseudo Relevance Feedback
 
-Kotlin console application with the implementation of Relevance Feedback and Pseudo Relevance Feedback that together with Rocchio Algorithm can improve results in the context of Information Retrieval. 
+Kotlin console application implementation of Relevance Feedback and Pseudo Relevance Feedback that together with Rocchio Algorithm can improve results in the context of Information Retrieval. 
 
 This also presents a proposal to improve the original Rocchio Algorithm by incorporating an Immediate Neighborhood Frequency. 
 
@@ -73,11 +73,14 @@ The Rocchio Algorithm is defined by a formula that can be seen in this [wikipedi
 
 ### Step-by-Step Demonstration
 
-Now, we present a brief demonstration of the Relevance Feedback algorithm. 
+Now, a brief demonstration of the Relevance Feedback algorithm. 
 
-The user wants to read all plays were a goal as disallowed by var (information need).
+The user wants to read all plays where a goal as disallowed by var (**information need**).
 
-So, the **user searches** for [goal disallowed by var] (original query).
+So, the **user searches** for 
+```
+[goal disallowed by var] (**original query**).
+```
 
 The system **retrieves the top 10** results for this query:
 - Result 1.
@@ -93,34 +96,41 @@ Since this is the **Relevance Feedback**, each result is displayed to the user a
 - ...
 - Result 10: Non-Relevant. 
 
-Then the system builds the inverted matrix. 
+Then the system builds the **inverted matrix**. 
 
-The **inverted matrix** contains a dictionary with all terms from the results. Each dictionary entry (term) contains an associated posting with the documentID and the position in which that term occurs in that document,
+The inverted matrix contains a dictionary with all terms from the results. Each dictionary entry (term) contains an associated posting with the documentID and the position in which that term occurs in that document.
 
+```
 - [term] -> [documentID: positions of occurence] 
+```
 
 In this example, 
 
-- [tries] -> [16613:4]
-- [caught] -> [1386:12]
-- ...
-- [goal] -> [9796: 21] -> [15237: 13] -> [1386: 20, 28] -> ...
+```
+[tries] -> [16613: 4]
+[caught] -> [1386: 12]
+...
+[goal] -> [9796: 21] -> [15237: 13] -> [1386: 20, 28] -> ...
+```
 
-We pass the **inverted matrix** and the list of results classified as relevant/non-relevant to the **Rocchio Algorithm**
+We pass the inverted matrix and the list of results classified as relevant/non-relevant to the **Rocchio Algorithm**
 
-It now computes the Query Vector with its formula. In the end, each term is associated to an weight. 
+It now computes the Query Vector. In the end, each term is associated with a weight. 
 
-- [dean] -> [0.75]
-- [strong] -> [0.75]
-- ...
-- [assistant] -> [0.46]
-- ...
-- [referee] -> [0.419]
-- ...
+```
+[dean] -> [0.75]
+[strong] -> [0.75]
+...
+[assistant] -> [0.46]
+...
+[referee] -> [0.419]
+...
+```
 
-We now select the two heighest weighted terms to append to the original query. 
-
-- [goal disallowed by var dean strong] (modified query)
+The system selects the two heighest weighted terms to append to the original query. 
+```
+[goal disallowed by var dean strong] (modified query)
+```
 
 Multiple iterations can be done. 
 
@@ -130,21 +140,23 @@ Multiple iterations can be done.
 
 When building this system, there were some "problems" found with the Rocchio Algorithm for many different queries. 
 
-Due to some characteristics of the documents on this collection, in the end of the Rocchio Algorithm there was many terms with the same weight. Sometimes, there was more than 20 terms with the same heighest weight. 
+Due to some characteristics of the documents on this collection, in the end of the Rocchio Algorithm there were many terms with the same weight. Sometimes, there were more than 20 terms with the same heighest weight. 
 
 For example, on the example presented earlier, we got:
-- [dean] -> [0.75]
-- [makes] -> [0.75]
-- [advice] -> [0.75]
-- [strong] -> [0.75]
-- [video] -> [0.75]
-- [assistant] -> [0.75]
-- ...
-- [challenge] -> [0.75]
+```
+[dean] -> [0.75]
+[makes] -> [0.75]
+[advice] -> [0.75]
+[strong] -> [0.75]
+[video] -> [0.75]
+[assistant] -> [0.75]
+...
+[challenge] -> [0.75]
+```
 
 How can we choose the most relevant terms if there are many of them with the heighest score?
 
-Of course that exploring and understanding more clearly the documents in the collection and tweaking, for example the stop words, can minimize this problem. But for this system, it was not enough. 
+Of course that exploring and understanding more clearly the documents in the collection and tweaking, for example the stopwords list, can minimize this problem. But for this system, it was not enough. 
 
 So I came up with an idea (based in some already existing notions) on how we can further discriminate each term according to its relevance to the query. 
 
@@ -163,12 +175,12 @@ Ql = Sum( Qm[i] + (d * V[i]) )
 ```
 
 where
-- Ql is the optimal query modified vector.
+- Ql is the optimal query vector modified.
 - Qm[i] is the weight of term i in the query vector obtained with the Rocchio Algorithm. 
-- d is the attenuation factor for the Immediate Neighborhood Factor.
-- V[i] is the Immediate Neighborhood Factor for term i (number of times it occur in the immediate proximity to query's terms). 
+- d is the attenuation weight for the Immediate Neighborhood Factor.
+- V[i] is the Immediate Neighborhood Factor for term i (number of times it occurs in the immediate proximity to query's terms). 
 
-With our earliear example, this changed the Query Vector to:
+With our earlier example, this changed the Query Vector to:
 - [advice] -> [1.15]
 - [referee] -> [0.81]
 - [dean] -> [0.75]
